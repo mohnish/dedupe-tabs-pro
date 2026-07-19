@@ -1,0 +1,169 @@
+:root {
+  color-scheme: light dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  width: 390px;
+  margin: 0;
+  color: #202124;
+  background: #f8fafb;
+}
+
+.popup-shell {
+  padding: 16px;
+}
+
+.popup-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.summary {
+  margin: 4px 0 0;
+  color: #5f6368;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+button {
+  min-height: 32px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.primary-button {
+  border: 1px solid #1558d6;
+  color: #ffffff;
+  background: #1558d6;
+  padding: 0 12px;
+}
+
+.secondary-button {
+  border: 1px solid #d9dee3;
+  color: #202124;
+  background: #ffffff;
+  padding: 0 10px;
+}
+
+.duplicate-groups {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.duplicate-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #d9dee3;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.group-main {
+  min-width: 0;
+}
+
+.group-url {
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-meta {
+  margin: 4px 0 0;
+  color: #5f6368;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.empty-state,
+.error-state {
+  margin: 14px 0 0;
+  padding: 16px;
+  border: 1px solid #d9dee3;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #5f6368;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.error-state {
+  color: #b3261e;
+}
+
+.popup-footer {
+  display: flex;
+  gap: 16px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #d9dee3;
+}
+
+.popup-footer a {
+  color: #1558d6;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #e8eaed;
+    background: #202124;
+  }
+
+  .summary,
+  .group-meta,
+  .empty-state {
+    color: #bdc1c6;
+  }
+
+  .secondary-button,
+  .duplicate-group,
+  .empty-state,
+  .error-state {
+    border-color: #3c4043;
+    color: #e8eaed;
+    background: #292a2d;
+  }
+
+  .popup-footer {
+    border-top-color: #3c4043;
+  }
+
+  .popup-footer a {
+    color: #8ab4f8;
+  }
+}

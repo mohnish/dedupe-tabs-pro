@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dedupe Tabs Pro</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header class="popup-header">
+        <div>
+          <h1>Dedupe Tabs</h1>
+          <p id="summary" class="summary">Checking tabs...</p>
+        </div>
+        <button id="close-all" class="primary-button" type="button" disabled>
+          Close all
+        </button>
+      </header>
+
+      <section id="duplicate-groups" class="duplicate-groups" aria-live="polite"></section>
+
+      <footer class="popup-footer">
+        <a href="options.html" target="_blank">Options</a>
+        <a id="shortcut-settings-link" href="chrome://extensions/shortcuts">
+          Shortcut
+        </a>
+      </footer>
+    </main>
+
+    <template id="duplicate-group-template">
+      <article class="duplicate-group">
+        <div class="group-main">
+          <h2 class="group-url"></h2>
+          <p class="group-meta"></p>
+        </div>
+        <button class="secondary-button close-group" type="button"></button>
+      </article>
+    </template>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

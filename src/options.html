@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dedupe Tabs Pro Options</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="options-panel">
+      <h1>Dedupe Tabs Pro</h1>
+
+      <form id="options-form">
+        <label class="setting">
+          <input id="ignore-query-params" type="checkbox">
+          <span>
+            <strong>Ignore query params</strong>
+            <small>When enabled, <code>/page?foo=bar</code> and <code>/page</code> are treated as duplicates.</small>
+          </span>
+        </label>
+
+        <fieldset class="setting-group">
+          <legend>Dedupe scope</legend>
+
+          <label class="setting">
+            <input type="radio" name="dedupe-scope" value="allWindows">
+            <span>
+              <strong>All open windows</strong>
+              <small>Find and close duplicates across every normal browser window.</small>
+            </span>
+          </label>
+
+          <label class="setting">
+            <input type="radio" name="dedupe-scope" value="activeWindow">
+            <span>
+              <strong>Active window only</strong>
+              <small>Only compare tabs in the window where you click the extension.</small>
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="shortcut-settings">
+          <a
+            id="shortcut-settings-link"
+            href="chrome://extensions/shortcuts"
+          >
+            Configure keyboard shortcut
+          </a>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>
