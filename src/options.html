@@ -19,6 +19,22 @@
           </span>
         </label>
 
+        <label class="setting">
+          <input id="dedupe-by-hostname" type="checkbox">
+          <span>
+            <strong>Dedupe by hostname</strong>
+            <small>When enabled, <code>https://example.com/foo</code> and <code>https://example.com/bar</code> are treated as duplicates.</small>
+          </span>
+        </label>
+
+        <label class="setting dependent-setting">
+          <input id="ignore-subdomains" type="checkbox">
+          <span>
+            <strong>Ignore subdomains</strong>
+            <small>When hostname dedupe is enabled, <code>foo.example.com</code> and <code>bar.example.com</code> are treated as <code>example.com</code>.</small>
+          </span>
+        </label>
+
         <fieldset class="setting-group">
           <legend>Dedupe scope</legend>
 

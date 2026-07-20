@@ -5,18 +5,32 @@ const DEDUPE_SCOPES = {
 
 const DEFAULT_OPTIONS = {
   ignoreQueryParams: false,
+  dedupeByHostname: false,
+  ignoreSubdomains: false,
   dedupeScope: DEDUPE_SCOPES.ALL_WINDOWS,
 };
 
 const form = document.querySelector("#options-form");
 const ignoreQueryParamsCheckbox = document.querySelector("#ignore-query-params");
+const dedupeByHostnameCheckbox = document.querySelector("#dedupe-by-hostname");
+const ignoreSubdomainsCheckbox = document.querySelector("#ignore-subdomains");
 const dedupeScopeInputs = document.querySelectorAll("input[name='dedupe-scope']");
 const shortcutSettingsLink = document.querySelector("#shortcut-settings-link");
 const status = document.querySelector("#status");
 
+function syncDependentOptions() {
+  ignoreSubdomainsCheckbox.disabled = !dedupeByHostnameCheckbox.checked;
+
+  if (!dedupeByHostnameCheckbox.checked) {
+    ignoreSubdomainsCheckbox.checked = false;
+  }
+}
+
 async function loadOptions() {
   const options = await chrome.storage.sync.get([
     "ignoreQueryParams",
+    "dedupeByHostname",
+    "ignoreSubdomains",
     "dedupeScope",
   ]);
 
@@ -24,6 +38,17 @@ async function loadOptions() {
     typeof options.ignoreQueryParams === "boolean"
       ? options.ignoreQueryParams
       : DEFAULT_OPTIONS.ignoreQueryParams;
+
+  dedupeByHostnameCheckbox.checked =
+    typeof options.dedupeByHostname === "boolean"
+      ? options.dedupeByHostname
+      : DEFAULT_OPTIONS.dedupeByHostname;
+
+  ignoreSubdomainsCheckbox.checked =
+    dedupeByHostnameCheckbox.checked &&
+    typeof options.ignoreSubdomains === "boolean"
+      ? options.ignoreSubdomains
+      : DEFAULT_OPTIONS.ignoreSubdomains;
 
   const dedupeScope = Object.values(DEDUPE_SCOPES).includes(options.dedupeScope)
     ? options.dedupeScope
@@ -33,6 +58,7 @@ async function loadOptions() {
     input.checked = input.value === dedupeScope;
   }
 
+  syncDependentOptions();
 }
 
 async function saveOptions() {
@@ -42,6 +68,9 @@ async function saveOptions() {
 
   await chrome.storage.sync.set({
     ignoreQueryParams: ignoreQueryParamsCheckbox.checked,
+    dedupeByHostname: dedupeByHostnameCheckbox.checked,
+    ignoreSubdomains:
+      dedupeByHostnameCheckbox.checked && ignoreSubdomainsCheckbox.checked,
     dedupeScope: selectedDedupeScope?.value ?? DEFAULT_OPTIONS.dedupeScope,
   });
 
@@ -52,6 +81,7 @@ async function saveOptions() {
 }
 
 form.addEventListener("change", () => {
+  syncDependentOptions();
   saveOptions();
 });
 
