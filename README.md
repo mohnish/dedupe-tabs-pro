@@ -19,3 +19,16 @@
 3. Click **Load unpacked** and select this repository.
 4. Click the Dedupe Tabs Pro toolbar icon to close duplicate tabs.
 5. Open the extension details page and choose **Extension options** to change dedupe behavior.
+
+## Release
+
+* Implement feature/bugfix
+* `make dist`
+* Test locally and ensure everything works and there are no regressions
+* `git changelog` -> write up the changelog
+* Commit changes in the `History.md`
+* `git release 1.0.0`
+
+## LICENSE
+
+MIT
