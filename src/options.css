@@ -38,6 +38,19 @@ form {
   cursor: pointer;
 }
 
+.setting + .setting {
+  margin-top: 16px;
+}
+
+.dependent-setting {
+  padding-left: 32px;
+}
+
+.setting:has(input:disabled) {
+  cursor: default;
+  opacity: 0.62;
+}
+
 input[type="checkbox"],
 input[type="radio"] {
   width: 18px;

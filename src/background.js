@@ -5,6 +5,8 @@ const DEDUPE_SCOPES = {
 
 const DEFAULT_OPTIONS = {
   ignoreQueryParams: false,
+  dedupeByHostname: false,
+  ignoreSubdomains: false,
   dedupeScope: DEDUPE_SCOPES.ALL_WINDOWS,
 };
 const DEFAULT_DEV_OPTIONS = {
@@ -20,6 +22,25 @@ const MESSAGES = {
   CLOSE_DUPLICATE_GROUP: "closeDuplicateGroup",
 };
 const PROFILE_LOG_LABEL = "[Dedupe Tabs Pro profile]";
+const COMMON_MULTI_PART_PUBLIC_SUFFIXES = new Set([
+  "ac.uk",
+  "co.in",
+  "co.jp",
+  "co.nz",
+  "co.uk",
+  "com.au",
+  "com.br",
+  "com.cn",
+  "com.hk",
+  "com.mx",
+  "com.sg",
+  "com.tr",
+  "com.tw",
+  "gov.uk",
+  "net.au",
+  "org.au",
+  "org.uk",
+]);
 
 let badgeUpdateTimeoutId;
 let profilingEnabled = DEFAULT_DEV_OPTIONS.profilingEnabled;
@@ -27,12 +48,23 @@ let profilingEnabled = DEFAULT_DEV_OPTIONS.profilingEnabled;
 async function getOptions() {
   const options = await chrome.storage.sync.get([
     "ignoreQueryParams",
+    "dedupeByHostname",
+    "ignoreSubdomains",
     "dedupeScope",
   ]);
 
   if (typeof options.ignoreQueryParams !== "boolean") {
     options.ignoreQueryParams = DEFAULT_OPTIONS.ignoreQueryParams;
   }
+
+  if (typeof options.dedupeByHostname !== "boolean") {
+    options.dedupeByHostname = DEFAULT_OPTIONS.dedupeByHostname;
+  }
+
+  options.ignoreSubdomains =
+    options.dedupeByHostname && typeof options.ignoreSubdomains === "boolean"
+      ? options.ignoreSubdomains
+      : DEFAULT_OPTIONS.ignoreSubdomains;
 
   if (!Object.values(DEDUPE_SCOPES).includes(options.dedupeScope)) {
     options.dedupeScope = DEFAULT_OPTIONS.dedupeScope;
@@ -83,6 +115,32 @@ async function getCurrentContextTab() {
   return activeTab;
 }
 
+function isIpAddressHostname(hostname) {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.includes(":");
+}
+
+function getBaseHostname(hostname) {
+  const normalizedHostname = hostname.toLowerCase();
+
+  if (!normalizedHostname || isIpAddressHostname(normalizedHostname)) {
+    return normalizedHostname;
+  }
+
+  const labels = normalizedHostname.split(".").filter(Boolean);
+
+  if (labels.length <= 2) {
+    return normalizedHostname;
+  }
+
+  const publicSuffix = labels.slice(-2).join(".");
+
+  if (COMMON_MULTI_PART_PUBLIC_SUFFIXES.has(publicSuffix)) {
+    return labels.slice(-3).join(".");
+  }
+
+  return labels.slice(-2).join(".");
+}
+
 function getDedupeKey(tabUrl, options) {
   if (!tabUrl) {
     return null;
@@ -90,6 +148,16 @@ function getDedupeKey(tabUrl, options) {
 
   try {
     const url = new URL(tabUrl);
+
+    if (options.dedupeByHostname) {
+      if (!url.hostname) {
+        return url.href;
+      }
+
+      return options.ignoreSubdomains
+        ? getBaseHostname(url.hostname)
+        : url.hostname;
+    }
 
     if (options.ignoreQueryParams) {
       url.search = "";
@@ -210,6 +278,8 @@ async function getDuplicateGroupsForContext(contextTab) {
     duplicateCount: groups.reduce((sum, group) => sum + group.closeCount, 0),
     scope: options.dedupeScope,
     ignoreQueryParams: options.ignoreQueryParams,
+    dedupeByHostname: options.dedupeByHostname,
+    ignoreSubdomains: options.ignoreSubdomains,
   };
 }
 
@@ -240,6 +310,8 @@ async function getProfiledDuplicateGroupsForContext(contextTab, profileEventName
     duplicateCount,
     scope: options.dedupeScope,
     ignoreQueryParams: options.ignoreQueryParams,
+    dedupeByHostname: options.dedupeByHostname,
+    ignoreSubdomains: options.ignoreSubdomains,
     durationsMs: {
       options: optionsMs,
       context: contextMs,
@@ -525,7 +597,10 @@ chrome.windows.onFocusChanged.addListener(() => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (
     areaName === "sync" &&
-    (changes.ignoreQueryParams || changes.dedupeScope)
+    (changes.ignoreQueryParams ||
+      changes.dedupeByHostname ||
+      changes.ignoreSubdomains ||
+      changes.dedupeScope)
   ) {
     scheduleDuplicateBadgeUpdate("options-changed");
   }

@@ -7,6 +7,8 @@
 - Close all duplicate tabs with a keyboard shortcut.
 - Close duplicates for one URL group at a time.
 - Configure whether query parameters are ignored while matching duplicates.
+- Configure whether duplicates are matched by hostname instead of full URL.
+- Configure whether hostname matching ignores subdomains.
 - Configure whether duplicates are matched across all windows or only the active window.
 - Show a toolbar badge when duplicate tabs are available to close.
 - Show a changelog tab after extension updates.
