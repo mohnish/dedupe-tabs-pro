@@ -1,7 +1,5 @@
 # Dedupe Tabs Pro
->A simple tab deduper for Chromium based browsers
-
-Author: Mohnish Thallavajhula
+>A clean tab deduper for Chromium based browsers
 
 ## Features
 
