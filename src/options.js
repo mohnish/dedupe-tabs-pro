@@ -32,6 +32,7 @@ async function loadOptions() {
   for (const input of dedupeScopeInputs) {
     input.checked = input.value === dedupeScope;
   }
+
 }
 
 async function saveOptions() {

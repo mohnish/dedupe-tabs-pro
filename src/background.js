@@ -7,6 +7,9 @@ const DEFAULT_OPTIONS = {
   ignoreQueryParams: false,
   dedupeScope: DEDUPE_SCOPES.ALL_WINDOWS,
 };
+const DEFAULT_DEV_OPTIONS = {
+  profilingEnabled: false,
+};
 
 const CHANGELOG_PAGE_PATH = "src/changelog.html";
 const DUPLICATE_BADGE_COLOR = "#b3261e";
@@ -16,8 +19,10 @@ const MESSAGES = {
   CLOSE_ALL_DUPLICATES: "closeAllDuplicates",
   CLOSE_DUPLICATE_GROUP: "closeDuplicateGroup",
 };
+const PROFILE_LOG_LABEL = "[Dedupe Tabs Pro profile]";
 
 let badgeUpdateTimeoutId;
+let profilingEnabled = DEFAULT_DEV_OPTIONS.profilingEnabled;
 
 async function getOptions() {
   const options = await chrome.storage.sync.get([
@@ -34,6 +39,27 @@ async function getOptions() {
   }
 
   return options;
+}
+
+async function loadDevOptions() {
+  const options = await chrome.storage.local.get(["profilingEnabled"]);
+
+  profilingEnabled =
+    typeof options.profilingEnabled === "boolean"
+      ? options.profilingEnabled
+      : DEFAULT_DEV_OPTIONS.profilingEnabled;
+}
+
+function getDuration(startedAt) {
+  return Number((performance.now() - startedAt).toFixed(2));
+}
+
+function profileLog(eventName, details) {
+  if (!profilingEnabled) {
+    return;
+  }
+
+  console.info(PROFILE_LOG_LABEL, eventName, details);
 }
 
 async function getTabsForDedupe(options, clickedTab) {
@@ -187,8 +213,74 @@ async function getDuplicateGroupsForContext(contextTab) {
   };
 }
 
-async function closeDuplicateTabs(contextTab) {
+async function getProfiledDuplicateGroupsForContext(contextTab, profileEventName) {
+  const startedAt = performance.now();
+
+  const optionsStartedAt = performance.now();
+  const options = await getOptions();
+  const optionsMs = getDuration(optionsStartedAt);
+
+  const contextStartedAt = performance.now();
+  const tab = contextTab ?? (await getCurrentContextTab());
+  const contextMs = getDuration(contextStartedAt);
+
+  const queryStartedAt = performance.now();
+  const tabs = await getTabsForDedupe(options, tab);
+  const queryMs = getDuration(queryStartedAt);
+
+  const groupingStartedAt = performance.now();
+  const groups = getDuplicateGroups(tabs, options, tab);
+  const groupingMs = getDuration(groupingStartedAt);
+  const duplicateCount = groups.reduce((sum, group) => sum + group.closeCount, 0);
+
+  const profile = {
+    event: profileEventName ?? "duplicate-groups",
+    tabCount: tabs.length,
+    groupCount: groups.length,
+    duplicateCount,
+    scope: options.dedupeScope,
+    ignoreQueryParams: options.ignoreQueryParams,
+    durationsMs: {
+      options: optionsMs,
+      context: contextMs,
+      tabsQuery: queryMs,
+      grouping: groupingMs,
+      total: getDuration(startedAt),
+    },
+  };
+
+  profileLog(profile.event, profile);
+
+  return {
+    groups,
+    duplicateCount,
+    scope: options.dedupeScope,
+    ignoreQueryParams: options.ignoreQueryParams,
+    profilingEnabled,
+    profile,
+  };
+}
+
+async function getDuplicateGroupsForContextWithOptionalProfile(
+  contextTab,
+  profileEventName,
+) {
+  if (profilingEnabled) {
+    return getProfiledDuplicateGroupsForContext(contextTab, profileEventName);
+  }
+
   const result = await getDuplicateGroupsForContext(contextTab);
+  return {
+    ...result,
+    profilingEnabled: false,
+  };
+}
+
+async function closeDuplicateTabs(contextTab) {
+  const result = await getDuplicateGroupsForContextWithOptionalProfile(
+    contextTab,
+    "close-all:groups",
+  );
   const duplicateTabIds = result.groups.flatMap((group) => group.tabIdsToClose);
 
   if (duplicateTabIds.length > 0) {
@@ -199,8 +291,42 @@ async function closeDuplicateTabs(contextTab) {
   return { closedCount: duplicateTabIds.length };
 }
 
+async function closeDuplicateTabsWithProfile(contextTab) {
+  const startedAt = performance.now();
+  const result = await getProfiledDuplicateGroupsForContext(
+    contextTab,
+    "close-all:groups",
+  );
+  const duplicateTabIds = result.groups.flatMap((group) => group.tabIdsToClose);
+  const removeStartedAt = performance.now();
+
+  if (duplicateTabIds.length > 0) {
+    await chrome.tabs.remove(duplicateTabIds);
+  }
+
+  const removeMs = getDuration(removeStartedAt);
+  await updateDuplicateBadge(contextTab);
+  const profile = {
+    event: "close-all",
+    closedCount: duplicateTabIds.length,
+    removeMs,
+    totalMs: getDuration(startedAt),
+  };
+
+  profileLog(profile.event, profile);
+
+  return {
+    closedCount: duplicateTabIds.length,
+    profilingEnabled: true,
+    profile,
+  };
+}
+
 async function closeDuplicateGroup(groupKey, contextTab) {
-  const result = await getDuplicateGroupsForContext(contextTab);
+  const result = await getDuplicateGroupsForContextWithOptionalProfile(
+    contextTab,
+    "close-group:groups",
+  );
   const group = result.groups.find((candidate) => candidate.key === groupKey);
 
   if (!group) {
@@ -213,8 +339,48 @@ async function closeDuplicateGroup(groupKey, contextTab) {
   return { closedCount: group.tabIdsToClose.length };
 }
 
-async function updateDuplicateBadge(contextTab) {
-  const result = await getDuplicateGroupsForContext(contextTab);
+async function closeDuplicateGroupWithProfile(groupKey, contextTab) {
+  const startedAt = performance.now();
+  const result = await getProfiledDuplicateGroupsForContext(
+    contextTab,
+    "close-group:groups",
+  );
+  const group = result.groups.find((candidate) => candidate.key === groupKey);
+
+  if (!group) {
+    await updateDuplicateBadge(contextTab);
+    return {
+      closedCount: 0,
+      profilingEnabled: true,
+    };
+  }
+
+  const removeStartedAt = performance.now();
+  await chrome.tabs.remove(group.tabIdsToClose);
+  const removeMs = getDuration(removeStartedAt);
+  await updateDuplicateBadge(contextTab);
+  const profile = {
+    event: "close-group",
+    groupKey,
+    closedCount: group.tabIdsToClose.length,
+    removeMs,
+    totalMs: getDuration(startedAt),
+  };
+
+  profileLog(profile.event, profile);
+
+  return {
+    closedCount: group.tabIdsToClose.length,
+    profilingEnabled: true,
+    profile,
+  };
+}
+
+async function updateDuplicateBadge(contextTab, reason = "direct") {
+  const result = await getDuplicateGroupsForContextWithOptionalProfile(
+    contextTab,
+    `badge:${reason}`,
+  );
   const duplicateCount = result.duplicateCount;
 
   if (duplicateCount === 0) {
@@ -230,10 +396,10 @@ async function updateDuplicateBadge(contextTab) {
   });
 }
 
-function scheduleDuplicateBadgeUpdate() {
+function scheduleDuplicateBadgeUpdate(reason) {
   clearTimeout(badgeUpdateTimeoutId);
   badgeUpdateTimeoutId = setTimeout(() => {
-    updateDuplicateBadge();
+    updateDuplicateBadge(undefined, reason);
   }, 150);
 }
 
@@ -258,21 +424,25 @@ async function handleMessage(message) {
   if (message?.type === MESSAGES.GET_DUPLICATE_GROUPS) {
     return {
       ok: true,
-      data: await getDuplicateGroupsForContext(),
+      data: await getDuplicateGroupsForContextWithOptionalProfile(),
     };
   }
 
   if (message?.type === MESSAGES.CLOSE_ALL_DUPLICATES) {
     return {
       ok: true,
-      data: await closeDuplicateTabs(),
+      data: profilingEnabled
+        ? await closeDuplicateTabsWithProfile()
+        : await closeDuplicateTabs(),
     };
   }
 
   if (message?.type === MESSAGES.CLOSE_DUPLICATE_GROUP) {
     return {
       ok: true,
-      data: await closeDuplicateGroup(message.groupKey),
+      data: profilingEnabled
+        ? await closeDuplicateGroupWithProfile(message.groupKey)
+        : await closeDuplicateGroup(message.groupKey),
     };
   }
 
@@ -282,13 +452,17 @@ async function handleMessage(message) {
   };
 }
 
+loadDevOptions();
+
 chrome.runtime.onInstalled.addListener((details) => {
   showChangelogOnUpdate(details);
-  scheduleDuplicateBadgeUpdate();
+  loadDevOptions();
+  scheduleDuplicateBadgeUpdate("installed");
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  loadDevOptions();
+  scheduleDuplicateBadgeUpdate("startup");
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
@@ -311,41 +485,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.tabs.onActivated.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-activated");
 });
 
 chrome.tabs.onAttached.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-attached");
 });
 
 chrome.tabs.onCreated.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-created");
 });
 
 chrome.tabs.onDetached.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-detached");
 });
 
 chrome.tabs.onMoved.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-moved");
 });
 
 chrome.tabs.onRemoved.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-removed");
 });
 
 chrome.tabs.onReplaced.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("tab-replaced");
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url || changeInfo.status === "complete") {
-    scheduleDuplicateBadgeUpdate();
+    scheduleDuplicateBadgeUpdate("tab-updated");
   }
 });
 
 chrome.windows.onFocusChanged.addListener(() => {
-  scheduleDuplicateBadgeUpdate();
+  scheduleDuplicateBadgeUpdate("window-focus");
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -353,6 +527,14 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     areaName === "sync" &&
     (changes.ignoreQueryParams || changes.dedupeScope)
   ) {
-    scheduleDuplicateBadgeUpdate();
+    scheduleDuplicateBadgeUpdate("options-changed");
+  }
+
+  if (areaName === "local" && changes.profilingEnabled) {
+    profilingEnabled =
+      typeof changes.profilingEnabled.newValue === "boolean"
+        ? changes.profilingEnabled.newValue
+        : DEFAULT_DEV_OPTIONS.profilingEnabled;
+    scheduleDuplicateBadgeUpdate("dev-options-changed");
   }
 });
