@@ -20,6 +20,10 @@
 4. Click the Dedupe Tabs Pro toolbar icon to close duplicate tabs.
 5. Open the extension details page and choose **Extension options** to change dedupe behavior.
 
+## Privacy Policy
+
+The privacy policy source is in [PRIVACY.md](PRIVACY.md). A public HTML version is available at [privacy.html](privacy.html) for GitHub Pages publishing.
+
 ### Profiling
 
 Profiling is a hidden local developer flag. Enable it from the extension service worker console:
