@@ -1,6 +1,8 @@
 # Dedupe Tabs Pro
 >A clean tab deduper for Chromium based browsers
 
+Install it from the [Google Chrome WebStore](https://chromewebstore.google.com/detail/dedupe-tabs-pro/ahfhnanlmciifjggcgmacnlacchmoeic)
+
 ## Features
 
 - Review duplicate tab groups from the extension toolbar popup.
