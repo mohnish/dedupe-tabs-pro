@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Dedupe Tabs Pro icon">
+  <defs>
+    <linearGradient id="bg" x1="20" y1="16" x2="108" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1558d6"/>
+      <stop offset="1" stop-color="#0b8043"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="26" fill="url(#bg)"/>
+  <rect x="28" y="31" width="58" height="58" rx="9" fill="#ffffff" opacity="0.42"/>
+  <rect x="40" y="43" width="60" height="60" rx="10" fill="#ffffff"/>
+  <path d="M57 61h26" stroke="#1558d6" stroke-width="8" stroke-linecap="round"/>
+  <path d="M57 78h20" stroke="#1558d6" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="91" cy="36" r="18" fill="#b3261e"/>
+  <path d="M84 29l14 14M98 29L84 43" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+</svg>

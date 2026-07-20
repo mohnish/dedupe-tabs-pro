@@ -12,6 +12,7 @@ dist: validate
 	@mkdir -p dist
 	@rm -f $(ZIP_NAME)
 	@cp manifest.json dist/
+	@cp -R icons dist/
 	@cp -R src dist/
 	@cd dist && zip -r ../$(ZIP_NAME) .
 

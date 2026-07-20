@@ -4,10 +4,22 @@
   "description": "Close duplicate browser tabs by URL.",
   "version": "1.0.0",
   "author": "Mohnish Thallavajhula",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": ["storage", "tabs"],
   "action": {
     "default_title": "Review duplicate tabs",
-    "default_popup": "src/popup.html"
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "commands": {
     "close-all-duplicates": {

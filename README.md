@@ -10,6 +10,7 @@
 - Configure whether duplicates are matched across all windows or only the active window.
 - Show a toolbar badge when duplicate tabs are available to close.
 - Show a changelog tab after extension updates.
+- Include extension icons for Chrome surfaces and the toolbar.
 
 ## Development
 
