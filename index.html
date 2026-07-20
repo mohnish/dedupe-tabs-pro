@@ -51,6 +51,48 @@
         margin-top: 34px;
       }
 
+      .video {
+        aspect-ratio: 16 / 9;
+        width: min(100%, 720px);
+        margin-top: 30px;
+      }
+
+      .video iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .screenshots {
+        display: grid;
+        gap: 18px;
+      }
+
+      figure {
+        margin: 0;
+        overflow: hidden;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgb(60 64 67 / 10%);
+      }
+
+      figure img {
+        display: block;
+        width: 100%;
+        height: clamp(220px, 52vw, 460px);
+        object-fit: contain;
+        background: #f5f7f9;
+      }
+
+      figcaption {
+        padding: 12px 14px;
+        border-top: 1px solid #e8eaed;
+        color: #5f6368;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
       h2 {
         margin: 0 0 14px;
         font-size: 22px;
@@ -94,6 +136,21 @@
           color: #bdc1c6;
         }
 
+        figure {
+          border-color: #3c4043;
+          background: #2d2f31;
+          box-shadow: none;
+        }
+
+        figure img {
+          background: #181a1b;
+        }
+
+        figcaption {
+          border-top-color: #3c4043;
+          color: #bdc1c6;
+        }
+
         a {
           color: #8ab4f8;
         }
@@ -106,6 +163,31 @@
         <h1>Dedupe Tabs Pro</h1>
         <p class="summary">Dedupe Tabs Pro is a simple Google Chrome extension that does one thing and one thing only - Dedupe Tabs...like a Pro ;-)</p>
       </header>
+
+      <div class="video">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/mPGm8W2i4CU?si=3L1rfB7bMEi32FeS"
+          title="Dedupe Tabs Pro demo video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+
+      <section aria-labelledby="screenshots-heading">
+        <h2 id="screenshots-heading">Screenshots</h2>
+        <div class="screenshots">
+          <figure>
+            <img src="assets/popup.png" alt="Dedupe Tabs Pro popup showing duplicate tab groups and close buttons." width="802" height="758">
+            <figcaption>Review duplicate tab groups from the toolbar popup.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/options.png" alt="Dedupe Tabs Pro options page with query parameter and window scope settings." width="1884" height="1360" loading="lazy" decoding="async">
+            <figcaption>Configure duplicate matching behavior from the options page.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/shortcut.png" alt="Chrome extension shortcuts page showing a shortcut for closing duplicate tabs." width="1410" height="422" loading="lazy" decoding="async">
+            <figcaption>Assign a keyboard shortcut for closing duplicate tabs.</figcaption>
+          </figure>
+        </div>
+      </section>
 
       <section aria-labelledby="features-heading">
         <h2 id="features-heading">Features</h2>
