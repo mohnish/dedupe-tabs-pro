@@ -23,6 +23,7 @@
 ## Privacy Policy
 
 The privacy policy source is in [PRIVACY.md](PRIVACY.md). A public HTML version is available at [privacy.html](privacy.html) for GitHub Pages publishing.
+The extension homepage is available at [index.html](index.html) for GitHub Pages publishing.
 
 ### Profiling
 
