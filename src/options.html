@@ -8,45 +8,66 @@
   </head>
   <body>
     <main class="options-panel">
-      <h1>Dedupe Tabs Pro</h1>
-
-      <form id="options-form">
-        <label class="setting">
-          <input id="ignore-query-params" type="checkbox">
-          <span>
-            <strong>Ignore query params</strong>
-            <small>When enabled, <code>/page?foo=bar</code> and <code>/page</code> are treated as duplicates.</small>
-          </span>
-        </label>
-
-        <fieldset class="setting-group">
-          <legend>Dedupe scope</legend>
-
-          <label class="setting">
-            <input type="radio" name="dedupe-scope" value="allWindows">
-            <span>
-              <strong>All open windows</strong>
-              <small>Find and close duplicates across every normal browser window.</small>
-            </span>
-          </label>
-
-          <label class="setting">
-            <input type="radio" name="dedupe-scope" value="activeWindow">
-            <span>
-              <strong>Active window only</strong>
-              <small>Only compare tabs in the window where you click the extension.</small>
-            </span>
-          </label>
-        </fieldset>
-
-        <div class="shortcut-settings">
-          <a
-            id="shortcut-settings-link"
-            href="chrome://extensions/shortcuts"
-          >
-            Configure keyboard shortcut
-          </a>
+      <header class="options-header">
+        <img src="../icons/icon48.png" width="40" height="40" alt="">
+        <div>
+          <h1>Dedupe Tabs Pro</h1>
+          <p>Choose which tabs count as duplicates, and where to look for them.</p>
         </div>
+      </header>
+
+      <form id="options-form" autocomplete="off">
+        <section class="card">
+          <h2>Matching</h2>
+          <label class="setting">
+            <span class="setting-copy">
+              <strong>Ignore query params</strong>
+              <small>When enabled, <code>/page?foo=bar</code> and <code>/page</code> are treated as duplicates.</small>
+            </span>
+            <span class="switch">
+              <input id="ignore-query-params" type="checkbox">
+              <span class="switch-track" aria-hidden="true"></span>
+            </span>
+          </label>
+        </section>
+
+        <section class="card">
+          <h2>Scope</h2>
+          <fieldset class="choices">
+            <legend class="visually-hidden">Dedupe scope</legend>
+
+            <label class="choice">
+              <input type="radio" name="dedupe-scope" value="allWindows" checked>
+              <span>
+                <strong>All open windows</strong>
+                <small>Find and close duplicates across every normal browser window.</small>
+              </span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="dedupe-scope" value="activeWindow">
+              <span>
+                <strong>Active window only</strong>
+                <small>Only compare tabs in the window where you click the extension.</small>
+              </span>
+            </label>
+          </fieldset>
+        </section>
+
+        <section class="card shortcut-card">
+          <div>
+            <h2>Keyboard shortcut</h2>
+            <p class="section-note">Close every duplicate without opening the popup.</p>
+            <p id="shortcut-keys" class="keys" aria-live="polite">
+              <kbd>Alt</kbd>
+              <kbd>Shift</kbd>
+              <kbd>D</kbd>
+            </p>
+          </div>
+          <a id="shortcut-settings-link" class="text-button" href="chrome://extensions/shortcuts">
+            Change shortcut
+          </a>
+        </section>
 
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </form>

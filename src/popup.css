@@ -131,11 +131,21 @@ button:disabled {
 }
 
 .popup-footer a {
+  padding: 4px 8px;
+  border-radius: 999px;
   color: #1558d6;
   font-size: 12px;
   font-weight: 650;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  text-decoration: none;
+}
+
+.popup-footer a:hover {
+  background: #e8f0fe;
+}
+
+.popup-footer a:focus-visible {
+  outline: 2px solid #1558d6;
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -165,5 +175,9 @@ button:disabled {
 
   .popup-footer a {
     color: #8ab4f8;
+  }
+
+  .popup-footer a:hover {
+    background: #24344a;
   }
 }

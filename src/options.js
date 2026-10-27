@@ -12,6 +12,7 @@ const form = document.querySelector("#options-form");
 const ignoreQueryParamsCheckbox = document.querySelector("#ignore-query-params");
 const dedupeScopeInputs = document.querySelectorAll("input[name='dedupe-scope']");
 const shortcutSettingsLink = document.querySelector("#shortcut-settings-link");
+const shortcutKeys = document.querySelector("#shortcut-keys");
 const status = document.querySelector("#status");
 
 async function loadOptions() {
@@ -32,7 +33,36 @@ async function loadOptions() {
   for (const input of dedupeScopeInputs) {
     input.checked = input.value === dedupeScope;
   }
+}
 
+function renderShortcut(shortcut) {
+  shortcutKeys.replaceChildren();
+
+  if (!shortcut) {
+    const empty = document.createElement("span");
+    empty.className = "keys-empty";
+    empty.textContent = "No shortcut set";
+    shortcutKeys.append(empty);
+    return;
+  }
+
+  const keys = shortcut.includes("+") ? shortcut.split("+") : [shortcut];
+
+  for (const key of keys) {
+    const keyNode = document.createElement("kbd");
+    keyNode.textContent = key;
+    shortcutKeys.append(keyNode);
+  }
+}
+
+async function loadShortcut() {
+  if (!chrome.commands?.getAll) {
+    return;
+  }
+
+  const commands = await chrome.commands.getAll();
+  const closeCommand = commands.find((command) => command.name === "close-all-duplicates");
+  renderShortcut(closeCommand?.shortcut || "");
 }
 
 async function saveOptions() {
@@ -52,12 +82,27 @@ async function saveOptions() {
 }
 
 form.addEventListener("change", () => {
+  if (!globalThis.chrome?.storage?.sync) {
+    return;
+  }
+
   saveOptions();
 });
 
 shortcutSettingsLink.addEventListener("click", (event) => {
   event.preventDefault();
+
+  if (!globalThis.chrome?.tabs?.create) {
+    return;
+  }
+
   chrome.tabs.create({ url: shortcutSettingsLink.href });
 });
 
-loadOptions();
+if (globalThis.chrome?.storage?.sync) {
+  loadOptions();
+}
+
+if (globalThis.chrome?.commands?.getAll) {
+  loadShortcut();
+}
