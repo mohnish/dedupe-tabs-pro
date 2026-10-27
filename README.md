@@ -11,6 +11,7 @@ Install it from the [Google Chrome WebStore](https://chromewebstore.google.com/d
 - Configure whether query parameters are ignored while matching duplicates.
 - Configure whether duplicates are matched across all windows or only the active window.
 - Show a toolbar badge when duplicate tabs are available to close.
+- Automatically close duplicate tabs whenever they are detected. Turn this off in the options.
 - Show a changelog tab after extension updates.
 - Include extension icons for Chrome surfaces and the toolbar.
 

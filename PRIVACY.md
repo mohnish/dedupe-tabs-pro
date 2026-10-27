@@ -6,9 +6,9 @@ Dedupe Tabs Pro is a Chrome extension that helps users find and close duplicate 
 
 ## Information the Extension Uses
 
-Dedupe Tabs Pro reads the URLs and titles of currently open browser tabs. This information is used only to identify duplicate tabs, display duplicate tab groups, show when duplicates are available, and close duplicate tabs when the user chooses.
+Dedupe Tabs Pro reads the URLs and titles of currently open browser tabs. This information is used only to identify duplicate tabs, display duplicate tab groups, show when duplicates are available, and close duplicate tabs. Tabs are closed from the popup or keyboard shortcut, and automatically when automatic closing is turned on.
 
-The extension also stores user preferences, such as whether query parameters are ignored while matching duplicate URLs and whether duplicate matching runs across all windows or only the active window.
+The extension also stores user preferences, such as whether query parameters are ignored while matching duplicate URLs, whether duplicate matching runs across all windows or only the active window, and whether duplicates are closed automatically.
 
 ## How Information Is Stored
 

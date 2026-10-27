@@ -61,13 +61,15 @@ function getScopeLabel(scope) {
   return scope === "activeWindow" ? "active window" : "all windows";
 }
 
-function renderEmptyState() {
+function renderEmptyState(autoCloseDuplicates) {
   closeAllButton.disabled = true;
   duplicateGroups.innerHTML = "";
 
   const emptyState = document.createElement("p");
   emptyState.className = "empty-state";
-  emptyState.textContent = "No duplicate tabs found.";
+  emptyState.textContent = autoCloseDuplicates
+    ? "Duplicates close automatically."
+    : "No duplicate tabs found.";
   duplicateGroups.append(emptyState);
 }
 
@@ -84,13 +86,15 @@ function renderError(error) {
 
 function renderDuplicateGroups(result) {
   const startedAt = profilingEnabled ? performance.now() : undefined;
-  const { groups, duplicateCount, scope } = result;
+  const { groups, duplicateCount, scope, autoCloseDuplicates } = result;
   duplicateGroups.innerHTML = "";
-  summary.textContent = `${duplicateCount} duplicate tabs available in ${getScopeLabel(scope)}.`;
+  summary.textContent = autoCloseDuplicates && duplicateCount === 0
+    ? `Duplicates close automatically in ${getScopeLabel(scope)}.`
+    : `${duplicateCount} duplicate tabs available in ${getScopeLabel(scope)}.`;
   closeAllButton.disabled = duplicateCount === 0;
 
   if (duplicateCount === 0) {
-    renderEmptyState();
+    renderEmptyState(autoCloseDuplicates);
     return;
   }
 

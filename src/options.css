@@ -38,6 +38,10 @@ form {
   cursor: pointer;
 }
 
+.setting + .setting {
+  margin-top: 18px;
+}
+
 input[type="checkbox"],
 input[type="radio"] {
   width: 18px;

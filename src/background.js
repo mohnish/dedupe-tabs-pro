@@ -6,7 +6,9 @@ const DEDUPE_SCOPES = {
 const DEFAULT_OPTIONS = {
   ignoreQueryParams: false,
   dedupeScope: DEDUPE_SCOPES.ALL_WINDOWS,
+  autoCloseDuplicates: true,
 };
+const AUTO_CLOSE_ACTION_TITLE = "Duplicate tabs close automatically";
 const DEFAULT_DEV_OPTIONS = {
   profilingEnabled: false,
 };
@@ -22,12 +24,14 @@ const MESSAGES = {
 const PROFILE_LOG_LABEL = "[Dedupe Tabs Pro profile]";
 
 let badgeUpdateTimeoutId;
+let duplicateCheck = Promise.resolve();
 let profilingEnabled = DEFAULT_DEV_OPTIONS.profilingEnabled;
 
 async function getOptions() {
   const options = await chrome.storage.sync.get([
     "ignoreQueryParams",
     "dedupeScope",
+    "autoCloseDuplicates",
   ]);
 
   if (typeof options.ignoreQueryParams !== "boolean") {
@@ -36,6 +40,10 @@ async function getOptions() {
 
   if (!Object.values(DEDUPE_SCOPES).includes(options.dedupeScope)) {
     options.dedupeScope = DEFAULT_OPTIONS.dedupeScope;
+  }
+
+  if (typeof options.autoCloseDuplicates !== "boolean") {
+    options.autoCloseDuplicates = DEFAULT_OPTIONS.autoCloseDuplicates;
   }
 
   return options;
@@ -210,6 +218,7 @@ async function getDuplicateGroupsForContext(contextTab) {
     duplicateCount: groups.reduce((sum, group) => sum + group.closeCount, 0),
     scope: options.dedupeScope,
     ignoreQueryParams: options.ignoreQueryParams,
+    autoCloseDuplicates: options.autoCloseDuplicates,
   };
 }
 
@@ -240,6 +249,7 @@ async function getProfiledDuplicateGroupsForContext(contextTab, profileEventName
     duplicateCount,
     scope: options.dedupeScope,
     ignoreQueryParams: options.ignoreQueryParams,
+    autoCloseDuplicates: options.autoCloseDuplicates,
     durationsMs: {
       options: optionsMs,
       context: contextMs,
@@ -256,6 +266,7 @@ async function getProfiledDuplicateGroupsForContext(contextTab, profileEventName
     duplicateCount,
     scope: options.dedupeScope,
     ignoreQueryParams: options.ignoreQueryParams,
+    autoCloseDuplicates: options.autoCloseDuplicates,
     profilingEnabled,
     profile,
   };
@@ -376,16 +387,12 @@ async function closeDuplicateGroupWithProfile(groupKey, contextTab) {
   };
 }
 
-async function updateDuplicateBadge(contextTab, reason = "direct") {
-  const result = await getDuplicateGroupsForContextWithOptionalProfile(
-    contextTab,
-    `badge:${reason}`,
-  );
-  const duplicateCount = result.duplicateCount;
-
+async function applyDuplicateBadge(duplicateCount, autoCloseDuplicates) {
   if (duplicateCount === 0) {
     await chrome.action.setBadgeText({ text: "" });
-    await chrome.action.setTitle({ title: DEFAULT_ACTION_TITLE });
+    await chrome.action.setTitle({
+      title: autoCloseDuplicates ? AUTO_CLOSE_ACTION_TITLE : DEFAULT_ACTION_TITLE,
+    });
     return;
   }
 
@@ -396,10 +403,47 @@ async function updateDuplicateBadge(contextTab, reason = "direct") {
   });
 }
 
+async function updateDuplicateBadge(contextTab, reason = "direct") {
+  const result = await getDuplicateGroupsForContextWithOptionalProfile(
+    contextTab,
+    `badge:${reason}`,
+  );
+
+  await applyDuplicateBadge(result.duplicateCount, result.autoCloseDuplicates);
+}
+
+async function performDuplicateCheck(contextTab, reason) {
+  const result = await getDuplicateGroupsForContextWithOptionalProfile(
+    contextTab,
+    `badge:${reason}`,
+  );
+
+  if (result.autoCloseDuplicates && result.duplicateCount > 0) {
+    try {
+      await closeDuplicateTabs(contextTab);
+    } catch (error) {
+      console.error("Dedupe Tabs Pro could not close duplicate tabs.", error);
+      await updateDuplicateBadge(contextTab, reason);
+    }
+    return;
+  }
+
+  await applyDuplicateBadge(result.duplicateCount, result.autoCloseDuplicates);
+}
+
+function enqueueDuplicateCheck(contextTab, reason) {
+  duplicateCheck = duplicateCheck
+    .catch(() => {})
+    .then(() => performDuplicateCheck(contextTab, reason))
+    .catch((error) => {
+      console.error("Dedupe Tabs Pro could not check for duplicate tabs.", error);
+    });
+}
+
 function scheduleDuplicateBadgeUpdate(reason) {
   clearTimeout(badgeUpdateTimeoutId);
   badgeUpdateTimeoutId = setTimeout(() => {
-    updateDuplicateBadge(undefined, reason);
+    enqueueDuplicateCheck(undefined, reason);
   }, 150);
 }
 
@@ -525,7 +569,9 @@ chrome.windows.onFocusChanged.addListener(() => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (
     areaName === "sync" &&
-    (changes.ignoreQueryParams || changes.dedupeScope)
+    (changes.ignoreQueryParams ||
+      changes.dedupeScope ||
+      changes.autoCloseDuplicates)
   ) {
     scheduleDuplicateBadgeUpdate("options-changed");
   }
